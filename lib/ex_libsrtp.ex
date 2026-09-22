@@ -54,6 +54,10 @@ defmodule ExLibSRTP do
 
   defguard is_ssrc(ssrc) when ssrc in 0..4_294_967_295
 
+  @type roc_t :: 0..4_294_967_295
+
+  defguard is_roc(roc) when roc in 0..4_294_967_295
+
   defmacrop ref(native) do
     quote do
       {unquote(__MODULE__), unquote(native)}
@@ -106,6 +110,33 @@ defmodule ExLibSRTP do
       window_size,
       policy.allow_repeat_tx
     )
+  end
+
+  @doc """
+  Set the roll-over counter (ROC) of an existing stream, returning the echoed
+  `ssrc` which was set.
+
+  The stream must be added first with an `:ssrc`-specific policy.
+
+  Expected errors:
+  - `:bad_param` - no stream exists for `ssrc`.
+  """
+  @spec set_stream_roc(t(), ssrc :: ssrc_t(), roc :: roc_t()) ::
+          {:ok, ssrc :: ssrc_t()} | {:error, libsrtp_error_t()}
+  def set_stream_roc(ref(native) = _srtp, ssrc, roc) when is_ssrc(ssrc) and is_roc(roc) do
+    Native.set_stream_roc(native, ssrc, roc)
+  end
+
+  @doc """
+  Get the current roll-over counter (ROC) of a stream.
+
+  Expected errors:
+  - `:bad_param` - no stream exists for `ssrc`.
+  """
+  @spec get_stream_roc(t(), ssrc :: ssrc_t()) ::
+          {:ok, roc :: roc_t()} | {:error, libsrtp_error_t()}
+  def get_stream_roc(ref(native) = _srtp, ssrc) when is_ssrc(ssrc) do
+    Native.get_stream_roc(native, ssrc)
   end
 
   @doc """
